@@ -1049,12 +1049,11 @@ func completeSchema(
 		}
 
 		// types and inputs needed for query and search
-		// Don't generate filter/orderable/hasFilter types for @extends types in Apollo service query
+		// Don't generate filter/orderable types for @extends types in Apollo service query
 		// to avoid conflicts when composing federated schemas
 		if !(apolloServiceQuery && hasExtends(defn)) {
 			addFilterType(sch, defn, providesTypeMap)
 			addTypeOrderable(sch, defn, providesTypeMap)
-			addTypeHasFilter(sch, defn, providesTypeMap)
 		}
 		addFieldFilters(sch, defn, providesTypeMap, apolloServiceQuery)
 		if !(apolloServiceQuery && hasExtends(defn)) {
@@ -1064,6 +1063,11 @@ func completeSchema(
 		// as it is resolved through `_entities` resolver.
 		if !(apolloServiceQuery && hasExtends(defn)) {
 			addQueries(sch, defn, providesTypeMap, params)
+		}
+		// addTypeHasFilter must come after addQueries so that fields added by queries (like vector_distance)
+		// are included in the HasFilter enum
+		if !(apolloServiceQuery && hasExtends(defn)) {
+			addTypeHasFilter(sch, defn, providesTypeMap)
 		}
 		// We need to call this at last as aggregateFields
 		// should not be part of HasFilter or UpdatePayloadType etc.
