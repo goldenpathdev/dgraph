@@ -69,6 +69,9 @@ func TestMain(m *testing.M) {
 				break
 			}
 		}
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
 		if i == maxRetries-1 {
 			x.Panic(fmt.Errorf("failed to deploy schema to alpha2 after %d retries", maxRetries))
 		}
