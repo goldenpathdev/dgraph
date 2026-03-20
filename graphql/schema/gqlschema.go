@@ -937,8 +937,6 @@ func applyFieldValidations(typ *ast.Definition, field *ast.FieldDefinition) gqle
 // query/mutation/update for all the types mentioned in the schema.
 // In case of Apollo service Query, input types from queries and mutations
 // are excluded due to the limited support currently.
-//
-//nolint:gocritic // negated conjunction form is clearer than De Morgan for federation checks
 func completeSchema(
 	sch *ast.Schema,
 	definitions []string,
@@ -1009,17 +1007,20 @@ func completeSchema(
 
 		// Common types to both Interface and Object.
 		// Don't generate reference types for @extends types in Apollo service query
+		//nolint:staticcheck // negated conjunction form is clearer than De Morgan for federation checks
 		if !(apolloServiceQuery && hasExtends(defn)) {
 			addReferenceType(sch, defn, providesTypeMap)
 		}
 
 		// Don't generate mutation input types for @extends types in Apollo service query
+		//nolint:staticcheck // negated conjunction form is clearer than De Morgan for federation checks
 		if params.generateUpdateMutation && !(apolloServiceQuery && hasExtends(defn)) {
 			addPatchType(sch, defn, providesTypeMap)
 			addUpdateType(sch, defn)
 			addUpdatePayloadType(sch, defn, providesTypeMap)
 		}
 
+		//nolint:staticcheck // negated conjunction form is clearer than De Morgan for federation checks
 		if params.generateDeleteMutation && !(apolloServiceQuery && hasExtends(defn)) {
 			addDeletePayloadType(sch, defn, providesTypeMap)
 		}
