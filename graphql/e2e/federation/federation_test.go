@@ -155,14 +155,14 @@ subgraphs:
 	defer os.Remove(supergraphFile)
 
 	// Run rover supergraph compose using Docker
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "docker", "run", "--rm",
 		"-e", "APOLLO_ELV2_LICENSE=accept",
 		"-v", absTestdataDir+":/workspace",
 		"-w", "/workspace",
-		"node:18-slim",
+		"node:24-slim",
 		"sh", "-c",
 		`apt-get update -qq && apt-get install -y -qq curl > /dev/null 2>&1 && \
 		 curl -sSL https://rover.apollo.dev/nix/latest | sh > /dev/null 2>&1 && \
