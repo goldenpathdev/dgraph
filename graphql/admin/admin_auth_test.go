@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/dgraph-io/dgraph/v25/graphql/resolve"
+	"github.com/hypermodeinc/dgraph/v24/graphql/resolve"
 )
 
 // mwPointer returns the function pointer for a middleware so it can be compared
