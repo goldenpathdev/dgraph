@@ -22,13 +22,14 @@ import (
 )
 
 const (
-	uidFunc     = "uid"
-	valueFunc   = "val"
-	typFunc     = "type"
-	lenFunc     = "len"
-	countFunc   = "count"
-	uidInFunc   = "uid_in"
-	similarToFn = "similar_to"
+	uidFunc       = "uid"
+	valueFunc     = "val"
+	typFunc       = "type"
+	exactTypFunc  = "exactType"
+	lenFunc       = "len"
+	countFunc     = "count"
+	uidInFunc     = "uid_in"
+	similarToFn   = "similar_to"
 )
 
 var (
@@ -62,6 +63,9 @@ type GraphQuery struct {
 	ShortestPathArgs ShortestPathArgs
 	Cascade          []string
 	IgnoreReflex     bool
+	// OWLGraph: Transitive property path support
+	TransitivePath   bool   // true if predicate has * suffix (follow transitively)
+	PathDepth        uint64 // 0 = unlimited, N = max N hops
 	Facets           *pb.FacetParams
 	FacetsFilter     *FilterTree
 	GroupbyAttrs     []GroupByAttr
@@ -2099,12 +2103,18 @@ L:
 		}
 	}
 
-	if function.Name != uidFunc && function.Name != typFunc && len(function.Attr) == 0 {
+	if function.Name != uidFunc && function.Name != typFunc &&
+		function.Name != exactTypFunc && len(function.Attr) == 0 {
 		return nil, it.Errorf("Got empty attr for function: [%s]", function.Name)
 	}
 
 	if function.Name == typFunc && len(function.Args) != 1 {
 		return nil, it.Errorf("type function only supports one argument. Got: %v", function.Args)
+	}
+
+	// exactType() also takes exactly one argument, like type()
+	if function.Name == exactTypFunc && len(function.Args) != 1 {
+		return nil, it.Errorf("exactType function only supports one argument. Got: %v", function.Args)
 	}
 
 	return function, nil
@@ -3408,12 +3418,29 @@ func godeep(it *lex.ItemIterator, gq *GraphQuery) error {
 			if count == seenWithPred {
 				return it.Errorf("Multiple predicates not allowed in single count.")
 			}
+
 			child := &GraphQuery{
 				Args:    make(map[string]string),
 				Attr:    val,
 				IsCount: count == seen,
 				Var:     varName,
 				Alias:   alias,
+			}
+
+			// OWLGraph: Check for transitive path syntax (pred* or pred*N).
+			// The lexer emits itemStar after the predicate name.
+			peekAfter, peekErr := it.Peek(1)
+			if peekErr == nil && len(peekAfter) > 0 && peekAfter[0].Typ == itemStar {
+				it.Next() // consume the star
+				child.TransitivePath = true
+				// Check if followed by a number (pred*3)
+				peekDepth, _ := it.Peek(1)
+				if len(peekDepth) > 0 && peekDepth[0].Typ == itemName {
+					if d, convErr := strconv.ParseUint(peekDepth[0].Val, 10, 64); convErr == nil {
+						it.Next() // consume the depth number
+						child.PathDepth = d
+					}
+				}
 			}
 
 			if gq.IsCount {

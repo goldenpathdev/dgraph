@@ -154,6 +154,10 @@ type params struct {
 	Cascade *CascadeArgs
 	// IgnoreReflex is true if the @ignorereflex directive is specified.
 	IgnoreReflex bool
+	// OWLGraph: TransitivePath is true for pred* syntax
+	TransitivePath bool
+	// PathDepth is the max depth for bounded transitive paths (pred*N)
+	PathDepth uint64
 
 	// ShortestPathArgs contains the from and to functions to execute a shortest path query.
 	ShortestPathArgs dql.ShortestPathArgs
@@ -332,6 +336,23 @@ func (sg *SubGraph) createSrcFunction(gf *dql.Function) {
 
 	// type function is just an alias for eq(type, "dgraph.type").
 	if gf.Name == "type" {
+		sg.Attr = "dgraph.type"
+		sg.SrcFunc.Name = "eq"
+		sg.SrcFunc.IsCount = false
+		sg.SrcFunc.IsValueVar = false
+		sg.SrcFunc.IsLenVar = false
+		return
+	}
+
+	// exactType is the same as type() — with materialized ancestor types,
+	// both query dgraph.type. The difference is semantic: exactType signals
+	// intent to match only explicitly asserted types (future: filter by
+	// owl.inferred facet). For now, it works identically to type() since
+	// the materializer adds all ancestor types — a node typed as
+	// GoldenRetriever will match type(Dog) but NOT exactType(Dog)
+	// once facet filtering is implemented.
+	// TODO: Add filter for owl.inferred=false when facet support is added.
+	if gf.Name == "exactType" {
 		sg.Attr = "dgraph.type"
 		sg.SrcFunc.Name = "eq"
 		sg.SrcFunc.IsCount = false
@@ -824,6 +845,8 @@ func newGraph(ctx context.Context, gq *dql.GraphQuery) (*SubGraph, error) {
 		Recurse:          gq.Recurse,
 		RecurseArgs:      gq.RecurseArgs,
 		ShortestPathArgs: gq.ShortestPathArgs,
+		TransitivePath:   gq.TransitivePath,
+		PathDepth:        gq.PathDepth,
 		Var:              gq.Var,
 		GroupbyAttrs:     gq.GroupbyAttrs,
 		IsGroupBy:        gq.IsGroupby,

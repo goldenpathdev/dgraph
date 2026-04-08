@@ -1,0 +1,40 @@
+# OWLGraph minimal dev cluster — 1 Zero, 1 Alpha
+services:
+  zero:
+    image: dgraph/dgraph:local
+    ports:
+      - "5080:5080"
+      - "6080:6080"
+    command: >
+      dgraph zero
+        --my=zero:5080
+        --replicas=1
+        --raft=idx=1
+        --logtostderr
+        --telemetry=reports=false;sentry=false;
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  alpha:
+    image: dgraph/dgraph:local
+    depends_on:
+      zero:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "9080:9080"
+    command: >
+      dgraph alpha
+        --my=alpha:7080
+        --zero=zero:5080
+        --logtostderr
+        --security=whitelist=0.0.0.0/0;
+        --telemetry=reports=false;sentry=false;
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

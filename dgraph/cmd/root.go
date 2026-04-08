@@ -38,6 +38,7 @@ import (
 	"github.com/dgraph-io/dgraph/v25/dgraph/cmd/live"
 	"github.com/dgraph-io/dgraph/v25/dgraph/cmd/mcp"
 	"github.com/dgraph-io/dgraph/v25/dgraph/cmd/migrate"
+	ontologyCmd "github.com/dgraph-io/dgraph/v25/dgraph/cmd/ontology"
 	"github.com/dgraph-io/dgraph/v25/dgraph/cmd/version"
 	"github.com/dgraph-io/dgraph/v25/dgraph/cmd/zero"
 	"github.com/dgraph-io/dgraph/v25/upgrade"
@@ -119,6 +120,9 @@ func initCmds() {
 		// environment variable.
 		sc.Conf.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	}
+	// OWLGraph ontology management command
+	RootCmd.AddCommand(ontologyCmd.Cmd())
+
 	// For bash shell completion
 	RootCmd.AddCommand(shellCompletionCmd())
 	RootCmd.SetHelpTemplate(x.RootTemplate)

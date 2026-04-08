@@ -444,6 +444,11 @@ func lexQuery(l *lex.Lexer) lex.StateFn {
 			return lexIRIRef
 		case r == star:
 			l.Emit(itemStar)
+			// OWLGraph: After *, check for depth number (e.g., *3)
+			if next := l.Peek(); next >= '0' && next <= '9' {
+				l.AcceptRun(func(r rune) bool { return r >= '0' && r <= '9' })
+				l.Emit(itemName) // Emit the depth as a name token
+			}
 		default:
 			return l.Errorf("Unrecognized character in lexText: %#U", r)
 		}

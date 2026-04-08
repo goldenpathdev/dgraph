@@ -539,6 +539,8 @@ func setupServer(closer *z.Closer, enableMcp bool) {
 	baseMux.HandleFunc("/mutate/", mutationHandler)
 	baseMux.HandleFunc("/commit", commitHandler)
 	baseMux.HandleFunc("/alter", alterHandler)
+	baseMux.HandleFunc("/ontology", ontologyHandler)
+	baseMux.HandleFunc("/ontology/introspect", ontologyIntrospectHandler)
 	baseMux.HandleFunc("/health", healthCheck)
 	baseMux.HandleFunc("/state", stateHandler)
 	baseMux.HandleFunc("/debug/jemalloc", x.JemallocHandler)

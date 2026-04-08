@@ -39,6 +39,7 @@ import (
 	"github.com/dgraph-io/dgraph/v25/conn"
 	"github.com/dgraph-io/dgraph/v25/dql"
 	gqlSchema "github.com/dgraph-io/dgraph/v25/graphql/schema"
+	owlmat "github.com/dgraph-io/dgraph/v25/owl/materializer"
 	"github.com/dgraph-io/dgraph/v25/posting"
 	"github.com/dgraph-io/dgraph/v25/protos/pb"
 	"github.com/dgraph-io/dgraph/v25/query"
@@ -556,6 +557,29 @@ func (s *Server) doMutate(ctx context.Context, qc *queryContext, resp *api.Respo
 	edges, err := query.ToDirectedEdges(qc.gmuList, newUids)
 	if err != nil {
 		return err
+	}
+
+	// OWLGraph: Materialize inferred type hierarchy edges.
+	// When dgraph.type is set to "GoldenRetriever", this adds edges for
+	// "Dog", "Mammal", "Animal" (all ancestor types in the ontology).
+	// The full engine also handles domain/range inference, inverse/symmetric
+	// properties, and disjointness validation.
+	if eng := owlmat.GetGlobalEngine(); eng != nil {
+		additional, matErr := eng.Materialize(edges, "dgraph.type")
+		if matErr != nil {
+			return matErr
+		}
+		if len(additional) > 0 {
+			edges = append(edges, additional...)
+		}
+	} else if m := owlmat.GetGlobal(); m != nil {
+		// Fallback to simple type materializer
+		if additional := m.MaterializeTypes(edges, "dgraph.type"); len(additional) > 0 {
+			edges = append(edges, additional...)
+		}
+		if inverses := m.MaterializeInverse(edges); len(inverses) > 0 {
+			edges = append(edges, inverses...)
+		}
 	}
 
 	if len(edges) > x.Config.LimitMutationsNquad {

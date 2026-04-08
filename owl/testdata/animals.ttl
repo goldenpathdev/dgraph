@@ -1,0 +1,93 @@
+@prefix : <http://example.org/animals#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================
+# Classes
+# ============================================
+
+:Animal a owl:Class .
+
+:Mammal a owl:Class ;
+    rdfs:subClassOf :Animal .
+
+:Bird a owl:Class ;
+    rdfs:subClassOf :Animal .
+
+:Dog a owl:Class ;
+    rdfs:subClassOf :Mammal .
+
+:Cat a owl:Class ;
+    rdfs:subClassOf :Mammal .
+
+:GoldenRetriever a owl:Class ;
+    rdfs:subClassOf :Dog .
+
+:Labrador a owl:Class ;
+    rdfs:subClassOf :Dog .
+
+:Parrot a owl:Class ;
+    rdfs:subClassOf :Bird .
+
+:Person a owl:Class .
+
+:Place a owl:Class .
+
+:Country a owl:Class ;
+    rdfs:subClassOf :Place .
+
+:City a owl:Class ;
+    rdfs:subClassOf :Place .
+
+# ============================================
+# Object Properties
+# ============================================
+
+:hasOwner a owl:ObjectProperty, owl:FunctionalProperty ;
+    rdfs:domain :Animal ;
+    rdfs:range :Person .
+
+:isOwnerOf a owl:ObjectProperty ;
+    rdfs:domain :Person ;
+    rdfs:range :Animal ;
+    owl:inverseOf :hasOwner .
+
+:locatedIn a owl:ObjectProperty, owl:TransitiveProperty ;
+    rdfs:domain :Place ;
+    rdfs:range :Place .
+
+:livesIn a owl:ObjectProperty, owl:FunctionalProperty ;
+    rdfs:domain :Person ;
+    rdfs:range :Place .
+
+:friendOf a owl:ObjectProperty, owl:SymmetricProperty ;
+    rdfs:domain :Person ;
+    rdfs:range :Person .
+
+# ============================================
+# Datatype Properties
+# ============================================
+
+:name a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:range xsd:string .
+
+:birthDate a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain :Animal ;
+    rdfs:range xsd:date .
+
+:breed a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain :Dog ;
+    rdfs:range xsd:string .
+
+:weight a owl:DatatypeProperty ;
+    rdfs:domain :Animal ;
+    rdfs:range xsd:float .
+
+# ============================================
+# Class Expressions
+# ============================================
+
+:DomesticAnimal owl:unionOf ( :Dog :Cat ) .
+
+:Dog owl:disjointWith :Cat .
